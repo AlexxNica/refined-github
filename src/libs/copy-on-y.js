@@ -4,23 +4,23 @@ import select from 'select-dom';
 const Y_KEYCODE = 89;
 
 const handler = ({keyCode, target}) => {
-	if (keyCode === Y_KEYCODE && target.nodeName !== 'INPUT') {
-		const commitIsh = select('.commit-tease-sha').textContent.trim();
-		const uri = location.href.replace(/\/blob\/[\w-]+\//, `/blob/${commitIsh}/`);
+  if (keyCode === Y_KEYCODE && target.nodeName !== 'INPUT') {
+    const commitIsh = select('.commit-tease-sha').textContent.trim();
+    const uri = location.href.replace(/\/blob\/[\w-]+\//, `/blob/${commitIsh}/`);
 
-		copyToClipboard(uri);
-	}
+    copyToClipboard(uri);
+  }
 };
 
 const setup = () => {
-	window.addEventListener('keyup', handler);
+  window.addEventListener('keyup', handler);
 };
 
 const destroy = () => {
-	window.removeEventListener('keyup', handler);
+  window.removeEventListener('keyup', handler);
 };
 
 export default {
-	setup,
-	destroy
+  setup,
+  destroy
 };

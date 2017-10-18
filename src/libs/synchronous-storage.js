@@ -10,8 +10,8 @@
 import SynchronousStorage from './synchronous-storage';
 
 const storage = await new SynchronousStorage(
-	() => browser.storage.local.get('name'),
-	va => browser.storage.local.set({name: va})
+  () => browser.storage.local.get('name'),
+  va => browser.storage.local.set({name: va})
 );
 
 console.log(storage.get()); // {}
@@ -24,20 +24,20 @@ console.log(storage.get()); // {name: 'Federico'}
  *   However if an error happens, SynchronousStorage will no longer match the real cache.
  */
 export default class SynchronousStorage {
-	constructor(get, set) {
-		this._get = get;
-		this._set = set;
-		return get().then(value => {
-			this._cache = value;
-			return this;
-		});
-	}
-	get() {
-		return this._cache;
-	}
-	set(value) {
-		this._cache = value;
-		return this._set(value);
-	}
+  constructor(get, set) {
+    this._get = get;
+    this._set = set;
+    return get().then(value => {
+      this._cache = value;
+      return this;
+    });
+  }
+  get() {
+    return this._cache;
+  }
+  set(value) {
+    this._cache = value;
+    return this._set(value);
+  }
 }
 

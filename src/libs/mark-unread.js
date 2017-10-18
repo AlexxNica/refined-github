@@ -10,378 +10,378 @@ import {getUsername} from './utils';
 let storage;
 
 function stripHash(url) {
-	return url.replace(/#.+$/, '');
+  return url.replace(/#.+$/, '');
 }
 
 function addMarkUnreadButton() {
-	const container = select('.js-thread-subscription-status');
-	if (container) {
-		const button = <button class="btn btn-sm btn-mark-unread js-mark-unread">Mark as unread</button>;
-		button.addEventListener('click', markUnread, {
-			once: true
-		});
-		container.append(button);
-	}
+  const container = select('.js-thread-subscription-status');
+  if (container) {
+    const button = <button class="btn btn-sm btn-mark-unread js-mark-unread">Mark as unread</button>;
+    button.addEventListener('click', markUnread, {
+      once: true
+    });
+    container.append(button);
+  }
 }
 
 function markRead(url) {
-	const unreadNotifications = storage.get();
-	unreadNotifications.forEach((notification, index) => {
-		if (notification.url === url) {
-			unreadNotifications.splice(index, 1);
-		}
-	});
+  const unreadNotifications = storage.get();
+  unreadNotifications.forEach((notification, index) => {
+    if (notification.url === url) {
+      unreadNotifications.splice(index, 1);
+    }
+  });
 
-	for (const a of select.all(`a.js-notification-target[href="${url}"]`)) {
-		const li = a.closest('li.js-notification');
-		li.classList.remove('unread');
-		li.classList.add('read');
-	}
+  for (const a of select.all(`a.js-notification-target[href="${url}"]`)) {
+    const li = a.closest('li.js-notification');
+    li.classList.remove('unread');
+    li.classList.add('read');
+  }
 
-	storage.set(unreadNotifications);
+  storage.set(unreadNotifications);
 }
 
 function markUnread() {
-	const participants = select.all('.participant-avatar').map(el => ({
-		username: el.getAttribute('aria-label'),
-		avatar: el.querySelector('img').src
-	}));
+  const participants = select.all('.participant-avatar').map(el => ({
+    username: el.getAttribute('aria-label'),
+    avatar: el.querySelector('img').src
+  }));
 
-	const {ownerName, repoName} = pageDetect.getOwnerAndRepo();
-	const repository = `${ownerName}/${repoName}`;
-	const title = select('.js-issue-title').textContent.trim();
-	const type = pageDetect.isPR() ? 'pull-request' : 'issue';
-	const url = stripHash(location.href);
+  const {ownerName, repoName} = pageDetect.getOwnerAndRepo();
+  const repository = `${ownerName}/${repoName}`;
+  const title = select('.js-issue-title').textContent.trim();
+  const type = pageDetect.isPR() ? 'pull-request' : 'issue';
+  const url = stripHash(location.href);
 
-	const stateLabel = select('.gh-header-meta .State');
-	let state;
+  const stateLabel = select('.gh-header-meta .State');
+  let state;
 
-	if (stateLabel.classList.contains('State--green')) {
-		state = 'open';
-	} else if (stateLabel.classList.contains('State--purple')) {
-		state = 'merged';
-	} else if (stateLabel.classList.contains('State--red')) {
-		state = 'closed';
-	}
+  if (stateLabel.classList.contains('State--green')) {
+    state = 'open';
+  } else if (stateLabel.classList.contains('State--purple')) {
+    state = 'merged';
+  } else if (stateLabel.classList.contains('State--red')) {
+    state = 'closed';
+  }
 
-	const lastCommentTime = select.all('.timeline-comment-header relative-time').pop();
-	const dateTitle = lastCommentTime.title;
-	const date = lastCommentTime.getAttribute('datetime');
+  const lastCommentTime = select.all('.timeline-comment-header relative-time').pop();
+  const dateTitle = lastCommentTime.title;
+  const date = lastCommentTime.getAttribute('datetime');
 
-	const unreadNotifications = storage.get();
+  const unreadNotifications = storage.get();
 
-	unreadNotifications.push({
-		participants,
-		repository,
-		title,
-		state,
-		type,
-		dateTitle,
-		date,
-		url
-	});
+  unreadNotifications.push({
+    participants,
+    repository,
+    title,
+    state,
+    type,
+    dateTitle,
+    date,
+    url
+  });
 
-	storage.set(unreadNotifications);
-	updateUnreadIndicator();
+  storage.set(unreadNotifications);
+  updateUnreadIndicator();
 
-	this.setAttribute('disabled', 'disabled');
-	this.textContent = 'Marked as unread';
+  this.setAttribute('disabled', 'disabled');
+  this.textContent = 'Marked as unread';
 }
 
 function renderNotifications() {
-	const myUserName = getUsername();
-	const unreadNotifications = storage.get()
-		.filter(notification => !isNotificationExist(notification.url))
-		.filter(notification => {
-			if (!isParticipatingPage()) {
-				return true;
-			}
+  const myUserName = getUsername();
+  const unreadNotifications = storage.get()
+    .filter(notification => !isNotificationExist(notification.url))
+    .filter(notification => {
+      if (!isParticipatingPage()) {
+        return true;
+      }
 
-			return isParticipatingNotification(notification, myUserName);
-		});
+      return isParticipatingNotification(notification, myUserName);
+    });
 
-	if (unreadNotifications.length === 0) {
-		return;
-	}
+  if (unreadNotifications.length === 0) {
+    return;
+  }
 
-	if (isEmptyPage()) {
-		select('.blankslate').remove();
-		select('.js-navigation-container').append(<div class="notifications-list"></div>);
-	}
+  if (isEmptyPage()) {
+    select('.blankslate').remove();
+    select('.js-navigation-container').append(<div class="notifications-list"></div>);
+  }
 
-	unreadNotifications.forEach(notification => {
-		const {
-			participants,
-			repository,
-			title,
-			state,
-			type,
-			dateTitle,
-			date,
-			url
-		} = notification;
+  unreadNotifications.forEach(notification => {
+    const {
+      participants,
+      repository,
+      title,
+      state,
+      type,
+      dateTitle,
+      date,
+      url
+    } = notification;
 
-		let icon;
+    let icon;
 
-		if (type === 'issue') {
-			if (state === 'open') {
-				icon = icons.openIssue();
-			}
+    if (type === 'issue') {
+      if (state === 'open') {
+        icon = icons.openIssue();
+      }
 
-			if (state === 'closed') {
-				icon = icons.closedIssue();
-			}
-		}
+      if (state === 'closed') {
+        icon = icons.closedIssue();
+      }
+    }
 
-		if (type === 'pull-request') {
-			if (state === 'open') {
-				icon = icons.openPullRequest();
-			}
+    if (type === 'pull-request') {
+      if (state === 'open') {
+        icon = icons.openPullRequest();
+      }
 
-			if (state === 'merged') {
-				icon = icons.mergedPullRequest();
-			}
+      if (state === 'merged') {
+        icon = icons.mergedPullRequest();
+      }
 
-			if (state === 'closed') {
-				icon = icons.closedPullRequest();
-			}
-		}
+      if (state === 'closed') {
+        icon = icons.closedPullRequest();
+      }
+    }
 
-		const hasList = select.exists(`a.notifications-repo-link[title="${repository}"]`);
-		if (!hasList) {
-			const list = (
-				<div class="boxed-group flush">
-					<form class="boxed-group-action">
-						<button class="mark-all-as-read css-truncate tooltipped tooltipped-w js-mark-all-read" aria-label="Mark all notifications as read">
-							{icons.check()}
-						</button>
-					</form>
+    const hasList = select.exists(`a.notifications-repo-link[title="${repository}"]`);
+    if (!hasList) {
+      const list = (
+        <div class="boxed-group flush">
+          <form class="boxed-group-action">
+            <button class="mark-all-as-read css-truncate tooltipped tooltipped-w js-mark-all-read" aria-label="Mark all notifications as read">
+              {icons.check()}
+            </button>
+          </form>
 
-					<h3>
-						<a href={'/' + repository} class="css-truncate css-truncate-target notifications-repo-link" title={repository}>
-							{repository}
-						</a>
-					</h3>
+          <h3>
+            <a href={'/' + repository} class="css-truncate css-truncate-target notifications-repo-link" title={repository}>
+              {repository}
+            </a>
+          </h3>
 
-					<ul class="boxed-group-inner list-group notifications"/>
-				</div>
-			);
+          <ul class="boxed-group-inner list-group notifications"/>
+        </div>
+      );
 
-			$('.notifications-list').prepend(list);
-		}
+      $('.notifications-list').prepend(list);
+    }
 
-		const list = $(`a.notifications-repo-link[title="${repository}"]`).parent().siblings('ul.notifications');
+    const list = $(`a.notifications-repo-link[title="${repository}"]`).parent().siblings('ul.notifications');
 
-		const usernames = participants
-			.map(participant => participant.username)
-			.join(', ');
+    const usernames = participants
+      .map(participant => participant.username)
+      .join(', ');
 
-		const avatars = participants
-			.map(participant => {
-				return <img alt={`@${participant.username}`} class="avatar from-avatar" src={participant.avatar} width={39} height={39}/>;
-			});
+    const avatars = participants
+      .map(participant => {
+        return <img alt={`@${participant.username}`} class="avatar from-avatar" src={participant.avatar} width={39} height={39}/>;
+      });
 
-		const item = (
-			<li class={`list-group-item js-notification js-navigation-item unread ${type}-notification`}>
-				<span class="list-group-item-name css-truncate">
-					{icon}
+    const item = (
+      <li class={`list-group-item js-notification js-navigation-item unread ${type}-notification`}>
+        <span class="list-group-item-name css-truncate">
+          {icon}
 
-					<a href={url} class="css-truncate-target js-notification-target js-navigation-open list-group-item-link">
-						{title}
-					</a>
-				</span>
+          <a href={url} class="css-truncate-target js-notification-target js-navigation-open list-group-item-link">
+            {title}
+          </a>
+        </span>
 
-				<ul class="notification-actions">
-					<li class="delete">
-						<button aria-label="Mark as read" class="btn-link delete-note tooltipped tooltipped-w js-mark-read">
-							{icons.check()}
-						</button>
-					</li>
+        <ul class="notification-actions">
+          <li class="delete">
+            <button aria-label="Mark as read" class="btn-link delete-note tooltipped tooltipped-w js-mark-read">
+              {icons.check()}
+            </button>
+          </li>
 
-					<li class="mute">
-						<button style={{opacity: 0, pointerEvents: 'none'}}>
-							{icons.mute()}
-						</button>
-					</li>
+          <li class="mute">
+            <button style={{opacity: 0, pointerEvents: 'none'}}>
+              {icons.mute()}
+            </button>
+          </li>
 
-					<li class="age">
-						<relative-time datetime={date} title={dateTitle}/>
-					</li>
+          <li class="age">
+            <relative-time datetime={date} title={dateTitle}/>
+          </li>
 
-					<li class="tooltipped tooltipped-s" aria-label={usernames}>
-						<div class="avatar-stack clearfix">
-							{avatars}
-						</div>
-					</li>
-				</ul>
-			</li>
-		);
+          <li class="tooltipped tooltipped-s" aria-label={usernames}>
+            <div class="avatar-stack clearfix">
+              {avatars}
+            </div>
+          </li>
+        </ul>
+      </li>
+    );
 
-		list.prepend(item);
-	});
+    list.prepend(item);
+  });
 
-	// Make sure that all the boxes with unread items are at the top
-	// This is necessary in the "All notifications" view
-	$('.boxed-group:has(".unread")').prependTo('.notifications-list');
+  // Make sure that all the boxes with unread items are at the top
+  // This is necessary in the "All notifications" view
+  $('.boxed-group:has(".unread")').prependTo('.notifications-list');
 }
 
 function isNotificationExist(url) {
-	return select.exists(`a.js-notification-target[href^="${stripHash(url)}"]`);
+  return select.exists(`a.js-notification-target[href^="${stripHash(url)}"]`);
 }
 
 function isEmptyPage() {
-	return select.exists('.blankslate');
+  return select.exists('.blankslate');
 }
 
 function isParticipatingPage() {
-	return /\/notifications\/participating/.test(location.pathname);
+  return /\/notifications\/participating/.test(location.pathname);
 }
 
 function isParticipatingNotification(notification, myUserName) {
-	const {participants} = notification;
+  const {participants} = notification;
 
-	return participants
-		.filter(participant => participant.username === myUserName)
-		.length > 0;
+  return participants
+    .filter(participant => participant.username === myUserName)
+    .length > 0;
 }
 
 function updateUnreadIndicator() {
-	const icon = select('.notification-indicator');
-	if (!icon) {
-		return;
-	}
-	const statusMark = icon.querySelector('.mail-status');
-	const hasRealNotifications = icon.matches('[data-ga-click$=":unread"]');
+  const icon = select('.notification-indicator');
+  if (!icon) {
+    return;
+  }
+  const statusMark = icon.querySelector('.mail-status');
+  const hasRealNotifications = icon.matches('[data-ga-click$=":unread"]');
 
-	const hasUnread = hasRealNotifications || storage.get().length > 0;
-	const label = hasUnread ? 'You have unread notifications' : 'You have no unread notifications';
+  const hasUnread = hasRealNotifications || storage.get().length > 0;
+  const label = hasUnread ? 'You have unread notifications' : 'You have no unread notifications';
 
-	icon.setAttribute('aria-label', label);
-	statusMark.classList.toggle('unread', hasUnread);
+  icon.setAttribute('aria-label', label);
+  statusMark.classList.toggle('unread', hasUnread);
 }
 
 function markNotificationRead(e) {
-	const notification = e.target.closest('li.js-notification');
-	const a = notification.querySelector('a.js-notification-target');
-	markRead(a.href);
-	updateUnreadIndicator();
+  const notification = e.target.closest('li.js-notification');
+  const a = notification.querySelector('a.js-notification-target');
+  markRead(a.href);
+  updateUnreadIndicator();
 }
 
 function markAllNotificationsRead(e) {
-	e.preventDefault();
-	const repoGroup = e.target.closest('.boxed-group');
-	for (const a of repoGroup.querySelectorAll('a.js-notification-target')) {
-		markRead(a.href);
-	}
-	updateUnreadIndicator();
+  e.preventDefault();
+  const repoGroup = e.target.closest('.boxed-group');
+  for (const a of repoGroup.querySelectorAll('a.js-notification-target')) {
+    markRead(a.href);
+  }
+  updateUnreadIndicator();
 }
 
 function addCustomAllReadBtn() {
-	const hasMarkAllReadBtnExists = select.exists('#notification-center a[href="#mark_as_read_confirm_box"]');
-	if (hasMarkAllReadBtnExists || storage.get().length === 0) {
-		return;
-	}
+  const hasMarkAllReadBtnExists = select.exists('#notification-center a[href="#mark_as_read_confirm_box"]');
+  if (hasMarkAllReadBtnExists || storage.get().length === 0) {
+    return;
+  }
 
-	$('#notification-center .tabnav-tabs:first').append(
-		<div class="float-right">
-			<a href="#mark_as_read_confirm_box" class="btn btn-sm" rel="facebox">Mark all as read</a>
+  $('#notification-center .tabnav-tabs:first').append(
+    <div class="float-right">
+      <a href="#mark_as_read_confirm_box" class="btn btn-sm" rel="facebox">Mark all as read</a>
 
-			<div id="mark_as_read_confirm_box" style={{display: 'none'}}>
-				<h2 class="facebox-header" data-facebox-id="facebox-header">Are you sure?</h2>
+      <div id="mark_as_read_confirm_box" style={{display: 'none'}}>
+        <h2 class="facebox-header" data-facebox-id="facebox-header">Are you sure?</h2>
 
-				<p data-facebox-id="facebox-description">Are you sure you want to mark all unread notifications as read?</p>
+        <p data-facebox-id="facebox-description">Are you sure you want to mark all unread notifications as read?</p>
 
-				<div class="full-button">
-					<button id="clear-local-notification" class="btn btn-block">Mark all notifications as read</button>
-				</div>
-			</div>
-		</div>
-	);
+        <div class="full-button">
+          <button id="clear-local-notification" class="btn btn-block">Mark all notifications as read</button>
+        </div>
+      </div>
+    </div>
+  );
 
-	$(document).on('click', '#clear-local-notification', () => {
-		storage.set([]);
-		location.reload();
-	});
+  $(document).on('click', '#clear-local-notification', () => {
+    storage.set([]);
+    location.reload();
+  });
 }
 
 function updateLocalNotificationsCount() {
-	const unreadCount = select('#notification-center .filter-list a[href="/notifications"] .count');
-	const githubNotificationsCount = Number(unreadCount.textContent);
-	const localNotifications = storage.get();
+  const unreadCount = select('#notification-center .filter-list a[href="/notifications"] .count');
+  const githubNotificationsCount = Number(unreadCount.textContent);
+  const localNotifications = storage.get();
 
-	if (localNotifications.length > 0) {
-		unreadCount.textContent = githubNotificationsCount + localNotifications.length;
-	}
+  if (localNotifications.length > 0) {
+    unreadCount.textContent = githubNotificationsCount + localNotifications.length;
+  }
 }
 
 function updateLocalParticipatingCount() {
-	const unreadCount = select('#notification-center .filter-list a[href="/notifications/participating"] .count');
-	const githubNotificationsCount = Number(unreadCount.textContent);
-	const myUserName = getUsername();
+  const unreadCount = select('#notification-center .filter-list a[href="/notifications/participating"] .count');
+  const githubNotificationsCount = Number(unreadCount.textContent);
+  const myUserName = getUsername();
 
-	const participatingNotifications = storage.get()
-		.filter(notification => isParticipatingNotification(notification, myUserName));
+  const participatingNotifications = storage.get()
+    .filter(notification => isParticipatingNotification(notification, myUserName));
 
-	if (participatingNotifications.length > 0) {
-		unreadCount.textContent = githubNotificationsCount + participatingNotifications.length;
-	}
+  if (participatingNotifications.length > 0) {
+    unreadCount.textContent = githubNotificationsCount + participatingNotifications.length;
+  }
 }
 
 // Migrate old localStorage.unreadNotifications to new storage.
 // For extra safety, keep the old notifications under a different name.
 // Drop function in mid August and drop the new key as well.
 function migrateOldStorage() {
-	const oldStorage = localStorage.getItem('unreadNotifications');
-	if (oldStorage) {
-		const list = JSON.parse(oldStorage);
-		console.log('Migrating old unreadNotifications storage', list);
-		storage.set(list);
-		localStorage.setItem('_unreadNotifications_migrated', JSON.stringify(list));
-		localStorage.removeItem('unreadNotifications');
-	}
+  const oldStorage = localStorage.getItem('unreadNotifications');
+  if (oldStorage) {
+    const list = JSON.parse(oldStorage);
+    console.log('Migrating old unreadNotifications storage', list);
+    storage.set(list);
+    localStorage.setItem('_unreadNotifications_migrated', JSON.stringify(list));
+    localStorage.removeItem('unreadNotifications');
+  }
 }
 
 async function setup() {
-	storage = await new SynchronousStorage(
-		() => {
-			return browser.storage.local.get({
-				unreadNotifications: []
-			}).then(storage => storage.unreadNotifications);
-		},
-		unreadNotifications => {
-			return browser.storage.local.set({unreadNotifications});
-		}
-	);
-	migrateOldStorage();
-	gitHubInjection(() => {
-		destroy();
+  storage = await new SynchronousStorage(
+    () => {
+      return browser.storage.local.get({
+        unreadNotifications: []
+      }).then(storage => storage.unreadNotifications);
+    },
+    unreadNotifications => {
+      return browser.storage.local.set({unreadNotifications});
+    }
+  );
+  migrateOldStorage();
+  gitHubInjection(() => {
+    destroy();
 
-		if (pageDetect.isNotifications()) {
-			renderNotifications();
-			addCustomAllReadBtn();
-			updateLocalNotificationsCount();
-			updateLocalParticipatingCount();
-			$(document).on('click', '.js-mark-read', markNotificationRead);
-			$(document).on('click', '.js-mark-all-read', markAllNotificationsRead);
-			$(document).on('click', '.js-delete-notification button', updateUnreadIndicator);
-			$(document).on('click', 'form[action="/notifications/mark"] button', () => {
-				storage.set([]);
-			});
-		} else if (pageDetect.isPR() || pageDetect.isIssue()) {
-			markRead(location.href);
-			addMarkUnreadButton();
-		}
+    if (pageDetect.isNotifications()) {
+      renderNotifications();
+      addCustomAllReadBtn();
+      updateLocalNotificationsCount();
+      updateLocalParticipatingCount();
+      $(document).on('click', '.js-mark-read', markNotificationRead);
+      $(document).on('click', '.js-mark-all-read', markAllNotificationsRead);
+      $(document).on('click', '.js-delete-notification button', updateUnreadIndicator);
+      $(document).on('click', 'form[action="/notifications/mark"] button', () => {
+        storage.set([]);
+      });
+    } else if (pageDetect.isPR() || pageDetect.isIssue()) {
+      markRead(location.href);
+      addMarkUnreadButton();
+    }
 
-		updateUnreadIndicator();
-	});
+    updateUnreadIndicator();
+  });
 }
 
 function destroy() {
-	$(document).off('click', '.js-mark-unread', markUnread);
-	$('.js-mark-unread').remove();
+  $(document).off('click', '.js-mark-unread', markUnread);
+  $('.js-mark-unread').remove();
 }
 
 export default {
-	setup,
-	destroy
+  setup,
+  destroy
 };

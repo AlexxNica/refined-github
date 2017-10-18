@@ -64,18 +64,18 @@ export const isNotifications = () => location.pathname.startsWith('/notification
 export const isRepoSettings = () => isRepo() && /^\/settings/.test(getRepoPath());
 
 export const getOwnerAndRepo = () => {
-	const [, ownerName, repoName] = location.pathname.split('/');
+  const [, ownerName, repoName] = location.pathname.split('/');
 
-	return {
-		ownerName,
-		repoName
-	};
+  return {
+    ownerName,
+    repoName
+  };
 };
 
 export const isSingleFile = () => {
-	const {ownerName, repoName} = getOwnerAndRepo();
-	const blobPattern = new RegExp(`/${ownerName}/${repoName}/blob/`);
-	return isRepo() && blobPattern.test(location.href);
+  const {ownerName, repoName} = getOwnerAndRepo();
+  const blobPattern = new RegExp(`/${ownerName}/${repoName}/blob/`);
+  return isRepo() && blobPattern.test(location.href);
 };
 
 export const hasCommentForm = () => select.exists('.js-previewable-comment-form');
